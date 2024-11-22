@@ -1,0 +1,218 @@
+import tkinter as tk
+from tkinter import messagebox
+from tkinter import ttk
+
+# Class Pasien untuk menyimpan informasi tentang pasien
+class Pasien:
+    def __init__(self, nama, sakit, obat, takaran):
+        self.nama = nama
+        self.sakit = sakit
+        self.obat = obat
+        self.takaran = takaran
+
+# Class Queue untuk mengelola antrean pasien
+class Queue:
+    def __init__(self):
+        self.antrian = []  # Inisialisasi antrian kosong
+
+    def add(self, pasien):
+        self.antrian.append(pasien)
+
+    def process(self):
+        if self.antrian:
+            return self.antrian.pop(0)  # Mengambil dan menghapus pasien pertama
+        return None
+
+    def view(self):
+        return self.antrian  # Mengembalikan seluruh antrian
+
+    def peek(self):
+        if self.antrian:
+            return self.antrian[0]  # Mengembalikan pasien pertama tanpa menghapus
+        return None
+
+# Fungsi untuk menentukan takaran berdasarkan obat
+def determine_takaran(obat):
+    if obat == "Paracetamol":
+        return "3x sehari 1 tablet"
+    elif obat == "Amoxicillin":
+        return "3x sehari 1 kapsul"
+    elif obat == "Vitamin C":
+        return "1x sehari 1 tablet"
+    elif obat == "Obat Batuk":
+        return "2x sehari 1 sendok"
+    elif obat == "Cough Syrup":
+        return "3x sehari 2 sendok"
+    elif obat == "Honey":
+        return "1x sehari 1 sendok"
+    elif obat == "Ibuprofen":
+        return "1x sehari 2 tablet"
+    elif obat == "Aspirin":
+        return "1x sehari 1 tablet"
+    else:
+        return "Tidak diketahui"
+
+# Fungsi untuk menentukan obat berdasarkan sakit
+def determine_obat(sakit):
+    if sakit == "Flu":
+        return ["Paracetamol", "Amoxicillin", "Vitamin C"]
+    elif sakit == "Batuk":
+        return ["Obat Batuk", "Cough Syrup", "Honey"]
+    elif sakit == "Sakit Kepala":
+        return ["Ibuprofen", "Aspirin", "Paracetamol"]
+    elif sakit == "Demam":
+        return ["Amoxicillin", "Paracetamol", "Ibuprofen"]
+    else:
+        return []
+ 
+# Class PharmacyApp untuk GUI
+class PharmacyApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Antrean Apoteker Sehat")
+        self.root.geometry("800x600")
+
+        # Inisialisasi objek Queue (antrian pasien)
+        self.queue = Queue()
+
+        # Frame Selamat Datang
+        self.frame_welcome = tk.Frame(self.root, bg="light green")
+        self.frame_welcome.pack(fill="both", expand=True)
+
+        label_welcome = tk.Label(
+            self.frame_welcome, 
+            text="Selamat Datang di Apotek Sehat", 
+            font=("Arial", 24), 
+            bg="light green"
+        )
+        label_welcome.pack(pady=100)  # Tambahkan jarak vertikal agar lebih ke tengah
+
+        button_next = tk.Button(
+            self.frame_welcome, 
+            text="Next", 
+            font=("Arial", 16), 
+            command=self.switch_to_main
+        )
+        button_next.pack(pady=20)
+
+        # Frame Halaman Utama
+        self.frame_main = tk.Frame(self.root, bg="light green")
+
+        # Membuat elemen-elemen GUI
+        self.frame_input = tk.Frame(self.frame_main, bg="light green")
+        self.frame_input.pack(pady=10)
+
+        label_nama = tk.Label(self.frame_input, text="Nama Pasien:", bg="light green")
+        label_nama.grid(row=0, column=0, padx=10, pady=10)
+        self.entry_nama = tk.Entry(self.frame_input, width=30)
+        self.entry_nama.grid(row=0, column=1, padx=10, pady=10)
+
+        label_sakit = tk.Label(self.frame_input, text="Sakit Pasien:", bg="light green")
+        label_sakit.grid(row=1, column=0, padx=5, pady=5)
+
+        self.sakit_var = tk.StringVar()
+        self.sakit_menu = ttk.Combobox(self.frame_input, textvariable=self.sakit_var, width=30)
+        self.sakit_menu['values'] = ["Flu", "Batuk", "Sakit Kepala", "Demam"]
+        self.sakit_menu.grid(row=1, column=1, padx=5, pady=5)
+
+        self.sakit_menu.bind("<<ComboboxSelected>>", self.update_obat_options)
+
+        label_obat = tk.Label(self.frame_input, text="Obat Pasien:", bg="light green")
+        label_obat.grid(row=2, column=0, padx=5, pady=5)
+
+        self.obat_var = tk.StringVar()
+        self.obat_menu = ttk.Combobox(self.frame_input, textvariable=self.obat_var, width=30)
+        self.obat_menu.grid(row=2, column=1, padx=5, pady=5)
+
+        button_add = tk.Button(self.frame_main, text="Tambah Pasien ke Antrean", command=self.add_to_queue)
+        button_add.pack(pady=5)
+
+        self.listbox = tk.Listbox(self.frame_main, width=70, height=10)
+        self.listbox.pack(pady=10)
+
+        frame_controls = tk.Frame(self.frame_main, bg="light green")
+        frame_controls.pack(pady=10)
+
+        button_process = tk.Button(frame_controls, text="Proses Pasien", command=self.process_queue)
+        button_process.grid(row=0, column=0, padx=5)
+
+        button_view = tk.Button(frame_controls, text="Lihat Antrean", command=self.view_queue)
+        button_view.grid(row=0, column=1, padx=5)
+
+        button_peek = tk.Button(frame_controls, text="Pasien Pertama", command=self.peek_queue)
+        button_peek.grid(row=0, column=2, padx=5)
+
+        button_back = tk.Button(self.frame_main, text="Kembali ke Halaman Awal", command=self.switch_to_welcome)
+        button_back.pack(pady=5)
+
+    def switch_to_main(self):
+        self.frame_welcome.pack_forget()
+        self.frame_main.pack(fill="both", expand=True)
+
+    def switch_to_welcome(self):
+        self.frame_main.pack_forget()
+        self.frame_welcome.pack(fill="both", expand=True)
+
+    def update_obat_options(self, *args):
+        sakit = self.sakit_var.get()
+        obat_options = determine_obat(sakit)
+        self.obat_menu['values'] = obat_options
+        if obat_options:
+            self.obat_var.set(obat_options[0])
+
+    def add_to_queue(self):
+        nama = self.entry_nama.get()
+        sakit = self.sakit_var.get()
+        obat = self.obat_var.get()
+
+        if nama and sakit and obat:
+            takaran = determine_takaran(obat)
+            # Membuat objek Pasien dan menambahkannya ke antrean
+            pasien = Pasien(nama, sakit, obat, takaran)
+            self.queue.add(pasien)
+            self.update_queue_display()
+            self.entry_nama.delete(0, tk.END)
+            self.sakit_var.set("")
+            self.obat_var.set("")
+        else:
+            messagebox.showwarning("Input Error", "Data mohon diisi dengan lengkap!")
+
+    def process_queue(self):
+        pasien = self.queue.process()
+        if pasien:
+            messagebox.showinfo(
+                "Processing",
+                f"Pasien {pasien.nama} sedang diproses.\n\n"
+                f"Obat: {pasien.obat}, Takarannya: {pasien.takaran}"
+            )
+            self.update_queue_display()
+            messagebox.showinfo(
+                "Terima Kasih",
+                "Terima kasih sudah mampir ke apotek kami.\nSemoga cepat sembuh!"
+            )
+        else:
+            messagebox.showwarning("Queue Empty", "Antrean kosong!")
+
+    def view_queue(self):
+        if self.queue.view():
+            antrian_text = "\n".join([f"Nama: {p.nama}, Sakit: {p.sakit}, Obat: {p.obat}, Takarannya: {p.takaran}" for p in self.queue.view()])
+            messagebox.showinfo("Antrean Pasien", antrian_text)
+        else:
+            messagebox.showinfo("Antrean Kosong", "Tidak ada pasien dalam antrean.")
+
+    def peek_queue(self):
+        pasien = self.queue.peek()
+        if pasien:
+            messagebox.showinfo("Pasien Pertama", f"Nama: {pasien.nama}, Sakit: {pasien.sakit}, Obat: {pasien.obat}, Takarannya: {pasien.takaran}")
+        else:
+            messagebox.showinfo("Antrean Kosong", "Tidak ada pasien dalam antrean.")
+
+    def update_queue_display(self):
+        self.listbox.delete(0, tk.END)
+        for pasien in self.queue.view():
+            self.listbox.insert(tk.END, f"Nama: {pasien.nama}, Sakit: {pasien.sakit}, Obat: {pasien.obat}, Takarannya: {pasien.takaran}")
+
+# Membuat window utama
+root = tk.Tk()
+app = PharmacyApp(root)
+root.mainloop()
